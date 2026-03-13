@@ -24,13 +24,17 @@ function calcFuelPerMonth(car: Car, dailyMiles: number, driveDays: number): numb
 }
 
 function getCostColorStyle(val: number, allVals: number[]) {
+    // If we only have 1 car, comparison is meaningless, so keep text neutral
     if (allVals.length < 2) return { color: 'var(--text-primary)', fontWeight: 500 };
     const min = Math.min(...allVals);
     const max = Math.max(...allVals);
     if (min === max) return { color: 'var(--text-primary)', fontWeight: 500 };
 
+    // Lower costs are better: min cost is green (good deal), max cost is red (expensive)
     if (val === min) return { color: 'var(--accent-green)', fontWeight: 600 };
     if (val === max) return { color: 'var(--accent-red)', fontWeight: 600 };
+    
+    // Everything in between is assigned a 'caution' yellow
     return { color: 'var(--accent-yellow)', fontWeight: 600 };
 }
 
@@ -45,8 +49,10 @@ function calcTrueCostYear(car: Car, globalInputs: GlobalInputs): { costPerYear: 
     if (ownershipMonths < car.loanTerm) {
         const r = car.apr / 100 / 12;
         if (r > 0) {
+            // Standard amortization formula to find the remaining principal balance after N payments
             loanBalance = loanPrincipal * (Math.pow(1 + r, car.loanTerm) - Math.pow(1 + r, ownershipMonths)) / (Math.pow(1 + r, car.loanTerm) - 1);
         } else {
+            // Handle 0% APR promotional loans linearly to prevent division by zero in the formula above
             loanBalance = loanPrincipal - (emi * ownershipMonths);
         }
     }

@@ -3,6 +3,8 @@ import { ComparisonSession, Car } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
 export function encodeStateToUrl(session: ComparisonSession): string {
+    // Compress keys to 1-2 characters to prevent the URL from exceeding the 2000-character browser limit, 
+    // especially when users add multiple cars.
     const minimal = {
         n: session.name,
         g: session.globalInputs,
