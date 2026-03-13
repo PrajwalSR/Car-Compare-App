@@ -3,9 +3,6 @@ import { useState } from 'react';
 import { Car, EfficiencyType } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
 
-const CAR_EMOJIS = ['🚗', '🚘', '🚙', '🏎️', '🚓', '🚕', '🛻', '🚐', '⚡', '🍃', '🔵', '🟣'];
-const ACCENT_COLORS = ['#0071e3', '#30d158', '#ff9f0a', '#ff453a', '#bf5af2', '#ffd60a'];
-
 interface AddCarModalProps {
     onAdd: (car: Car) => void;
     onClose: () => void;
@@ -16,8 +13,6 @@ const EMPTY_FORM = {
     name: '',
     year: '',
     note: '',
-    emoji: '🚗',
-    accentColor: '#0071e3',
     price: '',
     downPayment: '0',
     apr: '6.5',
@@ -28,6 +23,8 @@ const EMPTY_FORM = {
     insurance: '',
     maintenance: '',
     resaleValue: '',
+    leaseTerm: '36',
+    leaseMilesPerYear: '10000',
 };
 
 export default function AddCarModal({ onAdd, onClose, isMobile }: AddCarModalProps) {
@@ -71,8 +68,6 @@ export default function AddCarModal({ onAdd, onClose, isMobile }: AddCarModalPro
             name: form.name.trim(),
             year: form.year.trim(),
             note: form.note.trim(),
-            emoji: form.emoji,
-            accentColor: form.accentColor,
             price: parseFloat(form.price),
             downPayment: parseFloat(form.downPayment),
             apr: parseFloat(form.apr),
@@ -83,48 +78,38 @@ export default function AddCarModal({ onAdd, onClose, isMobile }: AddCarModalPro
             insurance: parseFloat(form.insurance),
             maintenance: parseFloat(form.maintenance),
             resaleValue: parseFloat(form.resaleValue),
+            financingMethod: 'finance',
+            leaseMonthlyPayment: 0,
+            leaseDispositionFee: 395,
+            leaseTerm: parseInt(form.leaseTerm, 10),
+            leaseMilesPerYear: parseInt(form.leaseMilesPerYear, 10),
         };
         onAdd(car);
     }
 
     const modalStyle: React.CSSProperties = isMobile
         ? {
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: 'var(--bg-elevated)',
-            borderRadius: '20px 20px 0 0',
-            padding: '24px 20px 32px',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            zIndex: 101,
-            animation: 'slideUp 0.3s both',
+            position: 'fixed', bottom: 0, left: 0, right: 0,
+            background: '#fff', borderRadius: '20px 20px 0 0',
+            padding: '24px 20px 32px', maxHeight: '90vh', overflowY: 'auto',
+            zIndex: 101, animation: 'slideUp 0.3s both',
+            boxShadow: '0 -8px 40px rgba(0,0,0,0.12)',
         }
         : {
-            background: 'var(--bg-elevated)',
-            borderRadius: 'var(--radius-card)',
-            border: '1px solid var(--border-subtle)',
-            padding: '28px',
-            width: '100%',
-            maxWidth: '520px',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            boxShadow: '0 24px 80px rgba(0,0,0,0.8)',
-            animation: 'slideUp 0.25s both',
-            position: 'relative',
-            zIndex: 101,
+            background: '#fff', borderRadius: '12px',
+            border: '1px solid #e5e7eb', padding: '28px',
+            width: '100%', maxWidth: '520px', maxHeight: '90vh',
+            overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+            animation: 'slideUp 0.25s both', position: 'relative', zIndex: 101,
         };
 
     const inp = (
-        key: string,
-        label: string,
-        value: string,
+        key: string, label: string, value: string,
         onChange: (v: string) => void,
         opts?: { type?: string; placeholder?: string; required?: boolean }
     ) => (
         <div>
-            <label htmlFor={`add-car-${key}`} style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+            <label htmlFor={`add-car-${key}`} style={{ display: 'block', fontSize: '12px', color: '#6b7280', marginBottom: '4px', fontWeight: 500 }}>
                 {label}{opts?.required && ' *'}
             </label>
             <input
@@ -134,9 +119,9 @@ export default function AddCarModal({ onAdd, onClose, isMobile }: AddCarModalPro
                 placeholder={opts?.placeholder}
                 onChange={(e) => onChange(e.target.value)}
                 className="input-field"
-                style={errors[key] ? { borderColor: 'var(--accent-red)' } : {}}
+                style={errors[key] ? { borderColor: '#dc2626' } : {}}
             />
-            {errors[key] && <div style={{ color: 'var(--accent-red)', fontSize: '11px', marginTop: '2px' }}>{errors[key]}</div>}
+            {errors[key] && <div style={{ color: '#dc2626', fontSize: '11px', marginTop: '2px' }}>{errors[key]}</div>}
         </div>
     );
 
@@ -144,8 +129,8 @@ export default function AddCarModal({ onAdd, onClose, isMobile }: AddCarModalPro
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
             <div style={modalStyle}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 style={{ fontSize: '18px', fontWeight: 700 }}>Add a Car</h2>
-                    <button className="btn-ghost" onClick={onClose} aria-label="Close modal" style={{ fontSize: '20px', padding: '4px 10px' }}>×</button>
+                    <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#111827' }}>Add a Car</h2>
+                    <button className="btn-ghost" onClick={onClose} aria-label="Close modal" style={{ fontSize: '20px', padding: '4px 10px', color: '#9ca3af' }}>×</button>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -156,53 +141,6 @@ export default function AddCarModal({ onAdd, onClose, isMobile }: AddCarModalPro
 
                     {inp('note', 'Notes (optional)', form.note, (v) => setField('note', v), { placeholder: '1 owner · 52k mi' })}
 
-                    {/* Emoji picker */}
-                    <div>
-                        <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>Emoji</label>
-                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                            {CAR_EMOJIS.map((em) => (
-                                <button
-                                    key={em}
-                                    onClick={() => setField('emoji', em)}
-                                    style={{
-                                        fontSize: '20px',
-                                        padding: '6px',
-                                        borderRadius: '8px',
-                                        border: form.emoji === em ? '2px solid var(--accent-blue)' : '2px solid transparent',
-                                        background: form.emoji === em ? 'rgba(41,151,255,0.15)' : 'var(--bg-input)',
-                                        cursor: 'pointer',
-                                    }}
-                                    aria-label={em}
-                                >
-                                    {em}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Color swatches */}
-                    <div>
-                        <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>Accent Color</label>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            {ACCENT_COLORS.map((c) => (
-                                <button
-                                    key={c}
-                                    onClick={() => setField('accentColor', c)}
-                                    aria-label={`Color ${c}`}
-                                    style={{
-                                        width: '28px',
-                                        height: '28px',
-                                        borderRadius: '50%',
-                                        background: c,
-                                        border: form.accentColor === c ? '3px solid #fff' : '3px solid transparent',
-                                        cursor: 'pointer',
-                                        boxShadow: form.accentColor === c ? `0 0 0 2px ${c}` : 'none',
-                                    }}
-                                />
-                            ))}
-                        </div>
-                    </div>
-
                     {inp('price', 'On-Road Price ($)', form.price, (v) => setField('price', v), { required: true, type: 'number', placeholder: '28000' })}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                         {inp('downPayment', 'Down Payment ($)', form.downPayment, (v) => setField('downPayment', v), { required: true, type: 'number', placeholder: '4000' })}
@@ -212,24 +150,18 @@ export default function AddCarModal({ onAdd, onClose, isMobile }: AddCarModalPro
 
                     {/* Fuel type */}
                     <div>
-                        <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>Fuel Type *</label>
+                        <label style={{ display: 'block', fontSize: '12px', color: '#6b7280', marginBottom: '6px', fontWeight: 500 }}>Fuel Type *</label>
                         <div style={{ display: 'flex', gap: '8px' }}>
                             {(['mpg', 'kwh'] as EfficiencyType[]).map((et) => (
-                                <button
-                                    key={et}
-                                    onClick={() => setField('efficiencyType', et)}
+                                <button key={et} onClick={() => setField('efficiencyType', et)}
                                     style={{
-                                        padding: '8px 18px',
-                                        borderRadius: 'var(--radius-pill)',
-                                        border: `1px solid ${form.efficiencyType === et ? 'var(--accent-blue)' : 'var(--border-subtle)'}`,
-                                        background: form.efficiencyType === et ? 'rgba(41,151,255,0.15)' : 'transparent',
-                                        color: form.efficiencyType === et ? 'var(--accent-blue)' : 'var(--text-secondary)',
-                                        cursor: 'pointer',
-                                        fontSize: '13px',
-                                        fontWeight: form.efficiencyType === et ? 600 : 400,
+                                        padding: '7px 18px', borderRadius: '999px', cursor: 'pointer',
+                                        border: `1px solid ${form.efficiencyType === et ? '#2563eb' : '#e5e7eb'}`,
+                                        background: form.efficiencyType === et ? '#eff6ff' : '#f8f9fa',
+                                        color: form.efficiencyType === et ? '#2563eb' : '#6b7280',
+                                        fontSize: '13px', fontWeight: form.efficiencyType === et ? 600 : 400,
                                         fontFamily: 'inherit',
-                                    }}
-                                >
+                                    }}>
                                     {et === 'mpg' ? '⛽ Gas/Hybrid' : '⚡ Electric (kWh)'}
                                 </button>
                             ))}

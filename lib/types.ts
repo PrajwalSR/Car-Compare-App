@@ -7,8 +7,6 @@ export interface Car {
     name: string;
     year: string;
     note: string;
-    emoji: string;
-    accentColor: string;
     price: number;
     downPayment: number;
     apr: number;
@@ -19,12 +17,18 @@ export interface Car {
     insurance: number;
     maintenance: number;
     resaleValue: number;
+    financingMethod: 'finance' | 'lease';
+    leaseMonthlyPayment?: number;
+    leaseTerm?: number;
+    leaseMilesPerYear?: number;
+    leaseDispositionFee?: number;
 }
 
 export interface GlobalInputs {
     dailyMiles: number;
     driveDaysPerMonth: number;
     ownershipYears: number;
+    syncLoanToOwnership: boolean;
 }
 
 // Scenarios removed.

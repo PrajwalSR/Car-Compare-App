@@ -24,91 +24,77 @@ export default function HeroSection({ carCount }: HeroSectionProps) {
     return (
         <section
             className="hero-section dot-grid relative overflow-hidden flex items-center"
-            style={{ minHeight: '60vh', background: 'var(--bg-base)' }}
+            style={{ minHeight: '46vh', background: '#fff', borderBottom: '1px solid #e5e7eb' }}
         >
-            {/* Gradient orb */}
+            {/* Subtle blue orb — toned down for light theme */}
             <div
                 aria-hidden="true"
                 style={{
-                    position: 'absolute',
-                    top: '40%',
-                    left: '50%',
-                    width: '600px',
-                    height: '600px',
-                    background: 'radial-gradient(circle, rgba(41,151,255,0.22) 0%, transparent 70%)',
-                    filter: 'blur(60px)',
+                    position: 'absolute', top: '50%', left: '50%',
+                    // Relative sizing to ensure the orb doesn't trigger overflow 
+                    // or look awkward on very small mobile screens (Rule 5).
+                    width: 'min(700px, 140vw)', height: 'min(400px, 80vw)',
+                    background: 'radial-gradient(ellipse, rgba(37,99,235,0.06) 0%, transparent 70%)',
+                    filter: 'blur(40px)',
                     transform: 'translate(-50%, -50%)',
-                    animation: 'pulse-orb 6s ease-in-out infinite',
+                    animation: 'pulse-orb 8s ease-in-out infinite',
                     pointerEvents: 'none',
                 }}
             />
 
-            <div className="container-max relative z-10 py-20 w-full text-center">
+            <div className="container-max relative z-10 py-16 w-full text-center">
                 <p
                     ref={eyebrowRef}
                     style={{
-                        fontSize: '11px',
-                        letterSpacing: '0.15em',
-                        fontWeight: 700,
-                        color: 'var(--accent-blue)',
-                        textTransform: 'uppercase',
-                        marginBottom: '20px',
-                        opacity: 0,
+                        fontSize: '11px', letterSpacing: '0.15em', fontWeight: 700,
+                        color: '#2563eb', textTransform: 'uppercase',
+                        marginBottom: '16px', opacity: 0,
                     }}
                 >
-                    Used Car Cost Calculator
+                    True Cost of Ownership Calculator
                 </p>
 
                 <h1
                     ref={h1Ref}
                     style={{
-                        fontSize: 'clamp(40px, 6vw, 72px)',
-                        fontWeight: 700,
-                        lineHeight: 1.05,
-                        letterSpacing: '-0.02em',
-                        color: 'var(--text-primary)',
-                        marginBottom: '20px',
-                        opacity: 0,
+                        fontSize: 'clamp(36px, 5.5vw, 64px)', fontWeight: 800,
+                        lineHeight: 1.08, letterSpacing: '-0.03em',
+                        color: '#111827', marginBottom: '18px', opacity: 0,
                     }}
                 >
                     Find Your Best
                     <br />
-                    <span style={{ color: 'var(--accent-blue)' }}>Car Deal.</span>
+                    <span style={{ color: '#2563eb' }}>Car Deal.</span>
                 </h1>
 
                 <p
                     ref={subtitleRef}
                     style={{
-                        fontSize: 'clamp(16px, 2vw, 20px)',
-                        color: 'var(--text-secondary)',
-                        maxWidth: '560px',
-                        margin: '0 auto 40px',
-                        lineHeight: 1.6,
-                        opacity: 0,
+                        fontSize: 'clamp(15px, 1.8vw, 18px)', color: '#6b7280',
+                        maxWidth: '520px', margin: '0 auto 32px',
+                        lineHeight: 1.65, opacity: 0,
                     }}
                 >
-                    Compare the true cost of ownership — loans, fuel, insurance, maintenance, and resale —
-                    across different cars side-by-side.
+                    Compare the true cost of ownership — loans, fuel, insurance,
+                    maintenance, and resale value — across cars side-by-side.
                 </p>
 
                 <div
                     ref={statRef}
                     style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        background: 'rgba(41,151,255,0.1)',
-                        border: '1px solid rgba(41,151,255,0.25)',
-                        borderRadius: 'var(--radius-pill)',
-                        padding: '10px 20px',
-                        fontSize: '14px',
-                        color: 'var(--accent-blue)',
-                        fontWeight: 500,
-                        opacity: 0,
+                        display: 'inline-flex', alignItems: 'center', gap: '8px',
+                        background: '#eff6ff', border: '1px solid #bfdbfe',
+                        borderRadius: '999px', padding: '8px 20px',
+                        fontSize: '13px', color: '#2563eb', fontWeight: 600, opacity: 0,
                     }}
                 >
-                    <span style={{ fontSize: '18px' }}>📊</span>
-                    Currently analyzing <strong className="num">{carCount}</strong> cars
+                    {/* SVG icon replaces 📊 for a more premium look per brand standards */}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '-1px' }}>
+                        <path d="M12 20V10"></path>
+                        <path d="M18 20V4"></path>
+                        <path d="M6 20v-4"></path>
+                    </svg>
+                    <span>Currently comparing <strong className="num">{carCount}</strong> {carCount === 1 ? 'car' : 'cars'}</span>
                 </div>
             </div>
         </section>

@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef, useReducer } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Car, GlobalInputs, ComparisonSession } from '@/lib/types';
 import { DEFAULT_CARS, DEFAULT_GLOBAL_INPUTS } from '@/lib/defaults';
-import { saveSession, loadSession, saveToHistory, loadHistory, deleteFromHistory } from '@/lib/storage';
+import { saveSession, loadSession, saveToHistory, loadHistory, deleteFromHistory, clearAll } from '@/lib/storage';
 import { encodeStateToUrl, decodeStateFromUrl } from '@/lib/urlState';
 
 import HeroSection from '@/components/HeroSection';
@@ -18,8 +18,8 @@ function newSession(overrides: Partial<ComparisonSession> = {}): ComparisonSessi
         name: 'Untitled Comparison',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        cars: DEFAULT_CARS,
-        globalInputs: DEFAULT_GLOBAL_INPUTS,
+        cars: JSON.parse(JSON.stringify(DEFAULT_CARS)),
+        globalInputs: { ...DEFAULT_GLOBAL_INPUTS },
         ...overrides,
     };
 }
@@ -33,7 +33,8 @@ type Action =
     | { type: 'ADD_CAR'; car: Car }
     | { type: 'REMOVE_CAR'; id: string }
     | { type: 'UPDATE_CAR'; id: string; updates: Partial<Car> }
-    | { type: 'RESTORE_CAR'; car: Car; index: number };
+    | { type: 'RESTORE_CAR'; car: Car; index: number }
+    | { type: 'SWAP_CARS'; index1: number; index2: number };
 
 function reducer(state: ComparisonSession, action: Action): ComparisonSession {
     const touch = (s: ComparisonSession): ComparisonSession => ({ ...s, updatedAt: new Date().toISOString() });
@@ -48,6 +49,13 @@ function reducer(state: ComparisonSession, action: Action): ComparisonSession {
         case 'RESTORE_CAR': {
             const cars = [...state.cars];
             cars.splice(action.index, 0, action.car);
+            return touch({ ...state, cars });
+        }
+        case 'SWAP_CARS': {
+            const cars = [...state.cars];
+            const temp = cars[action.index1];
+            cars[action.index1] = cars[action.index2];
+            cars[action.index2] = temp;
             return touch({ ...state, cars });
         }
         default: return state;
@@ -138,6 +146,11 @@ export default function Home() {
         setShowAddModal(false);
     }, []);
 
+    // Direct index swap used by drag-to-reorder in ComparisonSpreadsheet
+    const handleSwapCars = useCallback((index1: number, index2: number) => {
+        dispatch({ type: 'SWAP_CARS', index1, index2 });
+    }, []);
+
     // ── session name ──
     function startEditingName() {
         setSessionNameDraft(session.name);
@@ -180,6 +193,20 @@ export default function Home() {
     function handleLoadSession(s: ComparisonSession) { dispatch({ type: 'SET_SESSION', session: s }); setHistoryOpen(false); }
     function handleDeleteSession(id: string) { deleteFromHistory(id); setHistory(loadHistory()); }
 
+    function handleReset() {
+        if (window.confirm('Reset everything to defaults? This will clear all your current cars and inputs.')) {
+            // Clear localStorage FIRST so no stale data can be re-loaded
+            clearAll();
+            // Dispatch fresh defaults so auto-save writes the clean state
+            dispatch({ type: 'SET_SESSION', session: newSession() });
+            // Also clear in-memory history so the history panel reflects the wipe
+            setHistory([]);
+            // Strip shared-view URL params so reload doesn't rehydrate old shared data
+            window.history.replaceState({}, '', window.location.pathname);
+            setIsSharedView(false);
+        }
+    }
+
     return (
         <>
             {/* Print header */}
@@ -208,14 +235,14 @@ export default function Home() {
                             onBlur={commitSessionName}
                             onKeyDown={(e) => { if (e.key === 'Enter') commitSessionName(); if (e.key === 'Escape') setSessionNameEditing(false); }}
                             className="input-field"
-                            style={{ fontSize: '18px', fontWeight: 700, padding: '6px 12px', maxWidth: '360px' }}
+                            style={{ fontSize: '18px', fontWeight: 700, padding: '6px 12px', maxWidth: '360px', background: '#fff', borderColor: '#d1d5db', color: '#111827' }}
                             autoFocus
                         />
                     ) : (
-                        <h2 onClick={startEditingName} title="Click to rename" style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', cursor: 'text', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                        <h2 onClick={startEditingName} title="Click to rename" style={{ fontSize: '18px', fontWeight: 700, color: '#111827', cursor: 'text', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                             {session.name}
-                            <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 400 }}>✏️</span>
-                            {savedFlash && <span style={{ fontSize: '12px', color: 'var(--accent-green)', fontWeight: 400 }}>✓ Saved</span>}
+                            <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 400 }}>✏️</span>
+                            {savedFlash && <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: 400 }}>✓ Saved</span>}
                         </h2>
                     )}
                 </div>
@@ -233,7 +260,9 @@ export default function Home() {
                 globalInputs={session.globalInputs}
                 onUpdateCar={handleUpdateCar}
                 onUpdateGlobal={handleGlobalInputChange}
+                onSwapCars={handleSwapCars}
                 onAddCar={() => setShowAddModal(true)}
+                onRemoveCar={handleRemoveCar}
             />
 
             {/* Comparison History */}
@@ -271,12 +300,12 @@ export default function Home() {
             </section>
 
             {/* Footer */}
-            <footer style={{ borderTop: '1px solid var(--border-subtle)', padding: '28px 24px', color: 'var(--text-muted)', fontSize: '11px', lineHeight: 1.7 }}>
+            <footer style={{ borderTop: '1px solid #e5e7eb', padding: '24px 24px', color: '#9ca3af', fontSize: '11px', lineHeight: 1.7, background: '#fff' }}>
                 <div className="container-max" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
                     <span>Built with ❤️ for smarter car buying</span>
                     <button className="btn-ghost" onClick={handleShare} style={{ fontSize: '11px' }}>Share</button>
                     <ExportButton sessionName={session.name} />
-                    <button className="btn-ghost" style={{ fontSize: '11px', color: 'var(--accent-red)' }} onClick={() => { if (confirm('Reset to defaults?')) dispatch({ type: 'SET_SESSION', session: newSession() }); }}>Reset</button>
+                    <button className="btn-ghost" style={{ fontSize: '11px', color: '#dc2626' }} onClick={handleReset}>Reset</button>
                 </div>
             </footer>
 
@@ -307,7 +336,7 @@ export default function Home() {
             {/* Undo Toast */}
             {undoData && (
                 <div className="toast" style={{ animation: 'slideUp 0.3s both' }}>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>{undoData.car.emoji} {undoData.car.name} removed</span>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>{undoData.car.name} removed</span>
                     <button className="btn-primary" style={{ padding: '6px 16px', fontSize: '12px' }} onClick={handleUndo}>Undo</button>
                 </div>
             )}
